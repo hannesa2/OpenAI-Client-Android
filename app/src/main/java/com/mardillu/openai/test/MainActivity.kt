@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
-            takeNextAction(result?.data?.get(0)?.url)
+            takeNextAction(null, result?.data?.get(0)?.url)
         })
         chatGPTInputActions.add(CG_Moderation("I want to kill them.") { result, error ->
             if (error != null) {
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
-            takeNextAction(result?.data?.get(0)?.url)
+            takeNextAction(null, result?.data?.get(0)?.url)
         })
         chatGPTInputActions.add(CG_CreateImageVariation(imageFromAssets("img.png")) { result, error ->
             if (error != null) {
@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
-            takeNextAction(result?.data?.get(0)?.url)
+            takeNextAction(null, result?.data?.get(0)?.url)
         })
         chatGPTInputActions.add(CG_CreateTranscription(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
@@ -152,9 +152,13 @@ class MainActivity : AppCompatActivity() {
         takeNextAction(null)
     }
 
-    private fun takeNextAction(previousOutput: String?) {
-        previousOutput?.let {
-            trayState.addMessage(TrayMessage(TrayType.AI, it))
+    private fun takeNextAction(previousOutput: String?, url: String? = null) {
+        url?.let {
+            trayState.addMessage(TrayMessage(TrayType.AI, content = "", imageURL = it))
+        } ?: run {
+            previousOutput?.let {
+                trayState.addMessage(TrayMessage(TrayType.AI, content = it))
+            }
         }
         chatGPTInputActions.poll()?.let {
             trayState.addMessage(TrayMessage(TrayType.USER, it.prompt))
