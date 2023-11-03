@@ -3,6 +3,17 @@ package com.mardillu.openai.test
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.mardillu.openai.model.action.CG_ChatCompletion
+import com.mardillu.openai.model.action.CG_CreateImage
+import com.mardillu.openai.model.action.CG_CreateImageEdit
+import com.mardillu.openai.model.action.CG_CreateImageVariation
+import com.mardillu.openai.model.action.CG_CreateTranscription
+import com.mardillu.openai.model.action.CG_CreateTranslation
+import com.mardillu.openai.model.action.CG_EditCompletionAlt
+import com.mardillu.openai.model.action.CG_Embeddings
+import com.mardillu.openai.model.action.CG_Moderation
+import com.mardillu.openai.model.action.CG_TextCompletion
+import com.mardillu.openai.model.action.ChatGPTInputAction
 import com.mardillu.openai.model.Message
 import com.mardillu.openai.network.LoggingClient
 import com.mardillu.openai.network.OpenApiClient
@@ -11,17 +22,20 @@ import com.mardillu.openai.message.MessageAdapter
 import com.mardillu.openai.message.TrayMessage
 import com.mardillu.openai.message.TrayState
 import java.io.File
+import java.util.LinkedList
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private val chatGPTInputActions = LinkedList<ChatGPTInputAction>()
+    private lateinit var chatGptService: OpenApiClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val chatGptService = OpenApiClient()
+        chatGptService = OpenApiClient()
         val loggingApiService = LoggingClient()
 
 //        loggingApiService.logRequestTime(
@@ -39,59 +53,58 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-        state.addMessage(TrayMessage(true, "Hello chat gpt! what is the meaning of life?"))
-        chatGptService.getTextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
+        chatGPTInputActions.add(CG_TextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result1.text = result.choices[0].text
-                state.addMessage(TrayMessage(false, result.choices[0].text))
             }
-        }
+            takeNextAction(result?.choices?.get(0)?.text)
+        })
+        chatGPTInputActions.add(
+            CG_ChatCompletion(
+                messages = listOf(Message("user", "What is the update with your weekly PR review"))
+            ) { result, error ->
+                if (error != null) {
+                    // Handle error
+                } else if (result != null) {
 
-        state.addMessage(TrayMessage(true, "What is the update with your weekly PR review"))
-        chatGptService.getChatCompletion(messages = listOf(Message("user", "What is the update with your weekly PR review"))) { result, error ->
+                }
+                takeNextAction(result?.choices?.get(0)?.message?.content)
+            })
+        chatGPTInputActions.add(
+            CG_EditCompletionAlt(
+                input = "What day of the wek is it?",
+                instruction = "Fix the spelling mistakes"
+            ) { result, error ->
+                if (error != null) {
+                    // Handle error
+                } else if (result != null) {
+
+                }
+                takeNextAction(result?.choices?.get(0)?.text)
+            })
+        chatGPTInputActions.add(CG_Embeddings("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result2.text = result.choices[0].message.content
-                state.addMessage(TrayMessage(false, result.choices[0].message.content))
             }
-        }
-
-        chatGptService.getEditCompletionAlt(input = "What day of the wek is it?", instruction = "Fix the spelling mistakes") { result, error ->
+            takeNextAction(result?.data?.get(0)?.embedding?.size.toString())
+        })
+        chatGPTInputActions.add(CG_CreateImage("A cute baby sea otter") { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result3.text = result.choices[0].text
             }
-        }
-
-        chatGptService.getEmbeddings("Hello chat gpt! what is the meaning of life?") { result, error ->
+            takeNextAction(result?.data?.get(0)?.url)
+        })
+        chatGPTInputActions.add(CG_Moderation("I want to kill them.") { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result4.text = result.data[0].embedding.size.toString()
             }
-        }
-
-        chatGptService.createImage("A cute baby sea otter") { result, error ->
-            if (error != null) {
-                // Handle error
-            } else if (result != null) {
-                binding.result5.text = result.data[0].url
-            }
-        }
-
-        chatGptService.getModeration("I want to kill them.") { result, error ->
-            if (error != null) {
-                // Handle error
-            } else if (result != null) {
-                binding.result6.text = result.results[0].categories.hate.toString()
-            }
-        }
-
-        chatGptService.createImageEdit(
+            takeNextAction(result?.results?.get(0)?.categories?.hate.toString())
+        })
+        chatGPTInputActions.add(CG_CreateImageEdit(
             imageFromAssets("img.png"),
             "A cute cat sitting on a white table",
             imageFromAssets("img.png")
@@ -99,35 +112,43 @@ class MainActivity : AppCompatActivity() {
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result7.text = result.data[0].url
             }
-        }
-
-        chatGptService.createImageVariation(imageFromAssets("img.png")) { result, error ->
+            takeNextAction(result?.data?.get(0)?.url)
+        })
+        chatGPTInputActions.add(CG_CreateImageVariation(imageFromAssets("img.png")) { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result8.text = result.data[0].url
             }
-        }
-
-        chatGptService.createTranscription(imageFromAssets("audio.m4a")) { result, error ->
+            takeNextAction(result?.data?.get(0)?.url)
+        })
+        chatGPTInputActions.add(CG_CreateTranscription(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result9.text = result.text
             }
-        }
-
-        chatGptService.createTranslation(imageFromAssets("audio.m4a")) { result, error ->
+            takeNextAction(result?.text)
+        })
+        chatGPTInputActions.add(CG_CreateTranslation(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
-                binding.result10.text = result.text
             }
-        }
+            takeNextAction(result?.text)
+        })
 
         configureMessageStream()
+        takeNextAction(null)
+    }
+
+    private fun takeNextAction(previousOutput: String?) {
+        previousOutput?.let {
+            trayState.addMessage(TrayMessage(true, it))
+        }
+        chatGPTInputActions.poll()?.let {
+            trayState.addMessage(TrayMessage(false, it.prompt))
+            chatGptService.runAction(it)
+        }
     }
 
     private fun imageFromAssets(name: String): File {
@@ -144,7 +165,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun configureMessageStream() {
         val viewAdapter = MessageAdapter(this)
-        viewAdapter.submitList(state.messages)
+        viewAdapter.submitList(trayState.messages)
 
         val observer = { messages: List<TrayMessage> ->
             val lastMessage = messages.size - 1
@@ -154,7 +175,7 @@ class MainActivity : AppCompatActivity() {
         viewAdapter.onImageLoad = observer
 
         // observe messages for changes
-        state.liveData().observe(this, observer)
+        trayState.liveData().observe(this, observer)
 
         binding.messageStream.apply {
             setHasFixedSize(true)
@@ -164,6 +185,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        internal val state: TrayState = TrayState(messages = arrayListOf())
+        internal val trayState: TrayState = TrayState(messages = arrayListOf())
     }
 }

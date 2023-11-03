@@ -2,8 +2,17 @@ package com.mardillu.openai.network
 
 import com.mardillu.openai.BuildConfig
 import com.mardillu.openai.OpenAiInitializer
-import com.mardillu.openai.model.Message
 import com.mardillu.openai.model.TextCompletionRequest
+import com.mardillu.openai.model.action.CG_ChatCompletion
+import com.mardillu.openai.model.action.CG_CreateImage
+import com.mardillu.openai.model.action.CG_CreateImageVariation
+import com.mardillu.openai.model.action.CG_CreateTranscription
+import com.mardillu.openai.model.action.CG_CreateTranslation
+import com.mardillu.openai.model.action.CG_EditCompletionAlt
+import com.mardillu.openai.model.action.CG_Embeddings
+import com.mardillu.openai.model.action.CG_Moderation
+import com.mardillu.openai.model.action.CG_TextCompletion
+import com.mardillu.openai.model.action.ChatGPTInputAction
 import com.mardillu.openai.model.requests.*
 import com.mardillu.openai.model.response.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -14,6 +23,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
+import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -49,6 +59,21 @@ class OpenApiClient {
 
     private val apiService = retrofit.create(ChatGptApiService::class.java)
 
+    fun runAction(chatGPTInputAction: ChatGPTInputAction) {
+        when (chatGPTInputAction) {
+            is CG_ChatCompletion -> getChatCompletion(chatGPTInputAction)
+            is CG_CreateImage -> createImage(chatGPTInputAction)
+            is CG_CreateImageVariation -> createImageVariation(chatGPTInputAction)
+            is CG_CreateTranscription -> createTranscription(chatGPTInputAction)
+            is CG_CreateTranslation -> createTranslation(chatGPTInputAction)
+            is CG_EditCompletionAlt -> getEditCompletionAlt(chatGPTInputAction)
+            is CG_Embeddings -> getEmbeddings(chatGPTInputAction)
+            is CG_Moderation -> getModeration(chatGPTInputAction)
+            is CG_TextCompletion -> getTextCompletion(chatGPTInputAction)
+            else -> Timber.e("Action ${chatGPTInputAction.javaClass.simpleName} not handled")
+        }
+    }
+
     /**
      * Given a prompt, the model will return one or more predicted completions, a
      * nd can also return the probabilities of alternative tokens at each position.
@@ -73,45 +98,35 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/completions">OpenAI API Reference</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getTextCompletion(
-            vararg prompt: String,
-            model: String = "text-davinci-003",
-            maxTokens: Int = 16,
-            temperature: Double = 1.0,
-            top_p: Double = 1.0,
-            stream: Boolean = false,
-            logprobs: Int? = null,
-            stop: String? = null,
-            completionHandler: (TextCompletionResponse?, Throwable?) -> Unit
-    ) {
+    fun getTextCompletion(action: CG_TextCompletion) {
         val requestBody = TextCompletionRequest(
-                prompt,
-                maxTokens,
-                temperature,
-                model,
-                top_p,
-                stream,
-                logprobs,
-                stop
+            arrayOf(action.prompt),
+            action.maxTokens,
+            action.temperature,
+            action.model,
+            action.top_p,
+            action.stream,
+            action.logprobs,
+            action.stop
         )
         val call = apiService.getTextCompletion(requestBody)
 
         call.enqueue(object : Callback<TextCompletionResponse> {
             override fun onResponse(
-                    call: Call<TextCompletionResponse>,
-                    response: Response<TextCompletionResponse>
+                call: Call<TextCompletionResponse>,
+                response: Response<TextCompletionResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<TextCompletionResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -125,30 +140,26 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/chat">OpenAI API Reference for Chat</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getChatCompletion(
-            messages: List<Message>,
-            model: String = "gpt-3.5-turbo",
-            completionHandler: (ChatCompletionResponse?, Throwable?) -> Unit
-    ) {
-        val requestBody = ChatCompletionRequest(model, messages)
+    fun getChatCompletion(action: CG_ChatCompletion) {
+        val requestBody = ChatCompletionRequest(action.model, action.messages)
         val call = apiService.getChatCompletion(requestBody)
 
         call.enqueue(object : Callback<ChatCompletionResponse> {
             override fun onResponse(
-                    call: Call<ChatCompletionResponse>,
-                    response: Response<ChatCompletionResponse>
+                call: Call<ChatCompletionResponse>,
+                response: Response<ChatCompletionResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<ChatCompletionResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -164,18 +175,18 @@ class OpenApiClient {
      * @see {@link ChatGptService#getModels()}
      */
     fun getEditCompletion(
-            input: String,
-            instruction: String,
-            model: String = "text-davinci-edit-001",
-            completionHandler: (EditCompletionResponse?, Throwable?) -> Unit
+        input: String,
+        instruction: String,
+        model: String = "text-davinci-edit-001",
+        completionHandler: (EditCompletionResponse?, Throwable?) -> Unit
     ) {
         val requestBody = EditCompletionRequest(model, input, instruction)
         val call = apiService.getEditCompletion(requestBody)
 
         call.enqueue(object : Callback<EditCompletionResponse> {
             override fun onResponse(
-                    call: Call<EditCompletionResponse>,
-                    response: Response<EditCompletionResponse>
+                call: Call<EditCompletionResponse>,
+                response: Response<EditCompletionResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
@@ -193,32 +204,32 @@ class OpenApiClient {
     }
 
     private fun getEditCompletionAltInternal(
-            vararg prompt: String,
-            model: String = "text-davinci-003",
-            maxTokens: Int = 16,
-            temperature: Double = 1.0,
-            top_p: Double = 1.0,
-            stream: Boolean = false,
-            logprobs: Int? = null,
-            stop: String? = null,
-            completionHandler: (TextCompletionResponse?, Throwable?) -> Unit
+        vararg prompt: String,
+        model: String = "text-davinci-003",
+        maxTokens: Int = 16,
+        temperature: Double = 1.0,
+        top_p: Double = 1.0,
+        stream: Boolean = false,
+        logprobs: Int? = null,
+        stop: String? = null,
+        completionHandler: (TextCompletionResponse?, Throwable?) -> Unit
     ) {
         val requestBody = TextCompletionRequest(
-                prompt,
-                maxTokens,
-                temperature,
-                model,
-                top_p,
-                stream,
-                logprobs,
-                stop
+            prompt,
+            maxTokens,
+            temperature,
+            model,
+            top_p,
+            stream,
+            logprobs,
+            stop
         )
         val call = apiService.getTextCompletion(requestBody)
 
         call.enqueue(object : Callback<TextCompletionResponse> {
             override fun onResponse(
-                    call: Call<TextCompletionResponse>,
-                    response: Response<TextCompletionResponse>
+                call: Call<TextCompletionResponse>,
+                response: Response<TextCompletionResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
@@ -246,15 +257,12 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/edits">OpenAI API Reference for Edits</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getEditCompletionAlt(input: String,
-                             instruction: String,
-                             completionHandler: (TextCompletionResponse?, Throwable?) -> Unit
-    ) {
-        getEditCompletionAltInternal("$input. $instruction" ) { response, t ->
+    fun getEditCompletionAlt(action: CG_EditCompletionAlt) {
+        getEditCompletionAltInternal("$action.input. $action.instruction") { response, t ->
             if (response == null) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             } else {
-                completionHandler(response, null)
+                action.completionHandler(response, null)
             }
         }
     }
@@ -269,30 +277,26 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/embeddings">OpenAI API Reference for Embeddings</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getEmbeddings(
-            input: String,
-            model: String = "text-embedding-ada-002",
-            completionHandler: (CreateEmbeddingResponse?, Throwable?) -> Unit
-    ) {
-        val requestBody = CreateEmbeddingRequest(model, input)
+    fun getEmbeddings(action: CG_Embeddings) {
+        val requestBody = CreateEmbeddingRequest(action.model, action.input)
         val call = apiService.getEmbeddings(requestBody)
 
         call.enqueue(object : Callback<CreateEmbeddingResponse> {
             override fun onResponse(
-                    call: Call<CreateEmbeddingResponse>,
-                    response: Response<CreateEmbeddingResponse>
+                call: Call<CreateEmbeddingResponse>,
+                response: Response<CreateEmbeddingResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<CreateEmbeddingResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -307,38 +311,33 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create">OpenAI API Reference for creating images</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun createImage(
-            prompt: String,
-            n: Int = 2,
-            size: String = "1024x1024",
-            completionHandler: (CreateImageResponse?, Throwable?) -> Unit
-    ) {
-        if (n !in 1..10) {
+    fun createImage(action: CG_CreateImage) {
+        if (action.n !in 1..10) {
             throw Exception("n (number of images to generate) must be between 1 and 10")
         }
-        if (size !in listOf("1024x1024", "256x256", "512x512")) {
+        if (action.size !in listOf("1024x1024", "256x256", "512x512")) {
             throw Exception("The size of the images must be one of 256x256, 512x512, or 1024x1024")
         }
 
-        val requestBody = CreateImageRequest(prompt, n, size)
+        val requestBody = CreateImageRequest(action.prompt, action.n, action.size)
         val call = apiService.createImage(requestBody)
 
         call.enqueue(object : Callback<CreateImageResponse> {
             override fun onResponse(
-                    call: Call<CreateImageResponse>,
-                    response: Response<CreateImageResponse>
+                call: Call<CreateImageResponse>,
+                response: Response<CreateImageResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<CreateImageResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -352,30 +351,26 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/moderations">OpenAI API Reference for Moderation</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getModeration(
-            input: String,
-            model: String = "text-moderation-latest",
-            completionHandler: (ModerationResponse?, Throwable?) -> Unit
-    ) {
-        val requestBody = ModerationRequest(input, model)
+    fun getModeration(action: CG_Moderation) {
+        val requestBody = ModerationRequest(action.input, action.model)
         val call = apiService.getModeration(requestBody)
 
         call.enqueue(object : Callback<ModerationResponse> {
             override fun onResponse(
-                    call: Call<ModerationResponse>,
-                    response: Response<ModerationResponse>
+                call: Call<ModerationResponse>,
+                response: Response<ModerationResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<ModerationResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -388,14 +383,14 @@ class OpenApiClient {
      * @see {@link ChatGptService#getModels()}
      */
     fun getModels(
-            completionHandler: (GetModelsResponse?, Throwable?) -> Unit
+        completionHandler: (GetModelsResponse?, Throwable?) -> Unit
     ) {
         val call = apiService.getModels()
 
         call.enqueue(object : Callback<GetModelsResponse> {
             override fun onResponse(
-                    call: Call<GetModelsResponse>,
-                    response: Response<GetModelsResponse>
+                call: Call<GetModelsResponse>,
+                response: Response<GetModelsResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
@@ -425,12 +420,12 @@ class OpenApiClient {
      * @see {@link ChatGptService#getModels()}
      */
     fun createImageEdit(
-            image: File,
-            prompt: String,
-            mask: File? = null,
-            n: Int = 1,
-            size: String = "1024x1024",
-            completionHandler: (CreateImageResponse?, Throwable?) -> Unit
+        image: File,
+        prompt: String,
+        mask: File? = null,
+        n: Int = 1,
+        size: String = "1024x1024",
+        completionHandler: (CreateImageResponse?, Throwable?) -> Unit
     ) {
         val requestFile = image.asRequestBody("image/*".toMediaTypeOrNull())
         val _size = size.toRequestBody("text/plain".toMediaTypeOrNull())
@@ -449,8 +444,8 @@ class OpenApiClient {
 
         call.enqueue(object : Callback<CreateImageResponse> {
             override fun onResponse(
-                    call: Call<CreateImageResponse>,
-                    response: Response<CreateImageResponse>
+                call: Call<CreateImageResponse>,
+                response: Response<CreateImageResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
@@ -476,35 +471,30 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create-variation">OpenAI API Reference for Image Variations</a>
      */
-    fun createImageVariation(
-            image: File,
-            n: Int = 1,
-            size: String = "1024x1024",
-            completionHandler: (CreateImageResponse?, Throwable?) -> Unit
-    ) {
-        val requestFile = image.asRequestBody("image/*".toMediaTypeOrNull())
-        val _size = size.toRequestBody("text/plain".toMediaTypeOrNull())
-        val _n = "$n".toRequestBody("text/plain".toMediaTypeOrNull())
-        val imagePart = MultipartBody.Part.createFormData("image", image.name, requestFile)
+    fun createImageVariation(action: CG_CreateImageVariation) {
+        val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
+        val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
+        val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
+        val imagePart = MultipartBody.Part.createFormData("image", action.image.name, requestFile)
 
         val call = apiService.createImageVariation(imagePart, _n, _size)
 
         call.enqueue(object : Callback<CreateImageResponse> {
             override fun onResponse(
-                    call: Call<CreateImageResponse>,
-                    response: Response<CreateImageResponse>
+                call: Call<CreateImageResponse>,
+                response: Response<CreateImageResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<CreateImageResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -517,33 +507,29 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/audio/create">OpenAI API Reference for Audio transcription</a>
      */
-    fun createTranscription(
-            file: File,
-            model: String = "whisper-1",
-            completionHandler: (SimpleTextResponse?, Throwable?) -> Unit
-    ) {
-        val requestFile = file.asRequestBody("audio/*".toMediaTypeOrNull())
-        val _model = model.toRequestBody("text/plain".toMediaTypeOrNull())
-        val audioPart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+    fun createTranscription(action: CG_CreateTranscription) {
+        val requestFile = action.file.asRequestBody("audio/*".toMediaTypeOrNull())
+        val _model = action.model.toRequestBody("text/plain".toMediaTypeOrNull())
+        val audioPart = MultipartBody.Part.createFormData("file", action.file.name, requestFile)
 
         val call = apiService.createTranscription(audioPart, _model)
 
         call.enqueue(object : Callback<SimpleTextResponse> {
             override fun onResponse(
-                    call: Call<SimpleTextResponse>,
-                    response: Response<SimpleTextResponse>
+                call: Call<SimpleTextResponse>,
+                response: Response<SimpleTextResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<SimpleTextResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
@@ -556,33 +542,29 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/audio/create">OpenAI API Reference for Audio translation</a>
      */
-    fun createTranslation(
-            file: File,
-            model: String = "whisper-1",
-            completionHandler: (SimpleTextResponse?, Throwable?) -> Unit
-    ) {
-        val requestFile = file.asRequestBody("audio/*".toMediaTypeOrNull())
-        val _model = model.toRequestBody("text/plain".toMediaTypeOrNull())
-        val audioPart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+    fun createTranslation(action: CG_CreateTranslation) {
+        val requestFile = action.file.asRequestBody("audio/*".toMediaTypeOrNull())
+        val _model = action.model.toRequestBody("text/plain".toMediaTypeOrNull())
+        val audioPart = MultipartBody.Part.createFormData("file", action.file.name, requestFile)
 
         val call = apiService.createTranslation(audioPart, _model)
 
         call.enqueue(object : Callback<SimpleTextResponse> {
             override fun onResponse(
-                    call: Call<SimpleTextResponse>,
-                    response: Response<SimpleTextResponse>
+                call: Call<SimpleTextResponse>,
+                response: Response<SimpleTextResponse>
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<SimpleTextResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
