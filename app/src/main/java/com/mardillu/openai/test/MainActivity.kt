@@ -1,13 +1,15 @@
 package com.mardillu.openai.test
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.mardillu.openai.model.Message
-import com.mardillu.openai.network.LoggingApiService
 import com.mardillu.openai.network.LoggingClient
 import com.mardillu.openai.network.OpenApiClient
 import com.mardillu.openai.test.databinding.ActivityMainBinding
+import com.mardillu.openai.message.MessageAdapter
+import com.mardillu.openai.message.TrayMessage
+import com.mardillu.openai.message.TrayState
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
@@ -37,19 +39,23 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
+        state.addMessage(TrayMessage(true, "Hello chat gpt! what is the meaning of life?"))
         chatGptService.getTextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
                 binding.result1.text = result.choices[0].text
+                state.addMessage(TrayMessage(false, result.choices[0].text))
             }
         }
 
+        state.addMessage(TrayMessage(true, "What is the update with your weekly PR review"))
         chatGptService.getChatCompletion(messages = listOf(Message("user", "What is the update with your weekly PR review"))) { result, error ->
             if (error != null) {
                 // Handle error
             } else if (result != null) {
                 binding.result2.text = result.choices[0].message.content
+                state.addMessage(TrayMessage(false, result.choices[0].message.content))
             }
         }
 
@@ -121,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
+        configureMessageStream()
     }
 
     private fun imageFromAssets(name: String): File {
@@ -134,5 +140,30 @@ class MainActivity : AppCompatActivity() {
         inputStream.close()
 
         return file
+    }
+
+    private fun configureMessageStream() {
+        val viewAdapter = MessageAdapter(this)
+        viewAdapter.submitList(state.messages)
+
+        val observer = { messages: List<TrayMessage> ->
+            val lastMessage = messages.size - 1
+            viewAdapter.notifyItemChanged(lastMessage)
+            binding.messageStream.scrollToPosition(lastMessage)
+        }
+        viewAdapter.onImageLoad = observer
+
+        // observe messages for changes
+        state.liveData().observe(this, observer)
+
+        binding.messageStream.apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = viewAdapter
+        }
+    }
+
+    companion object {
+        internal val state: TrayState = TrayState(messages = arrayListOf())
     }
 }

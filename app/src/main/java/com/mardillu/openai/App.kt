@@ -1,13 +1,8 @@
-package com.mardillu.openai.test
+package com.mardillu.openai
 
 import android.app.Application
-import com.mardillu.openai.OpenAiInitializer
+import com.mardillu.openai.test.R
 
-/**
- * Created on 26/03/2023 at 5:49 PM
- *
- * @author mardillu
- */
 class App : Application() {
     override fun onCreate() {
         super.onCreate()

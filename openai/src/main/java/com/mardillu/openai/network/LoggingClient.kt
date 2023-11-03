@@ -1,26 +1,12 @@
 package com.mardillu.openai.network
 
-import com.mardillu.openai.BuildConfig
-import com.mardillu.openai.OpenAiInitializer
-import com.mardillu.openai.model.Message
-import com.mardillu.openai.model.TextCompletionRequest
 import com.mardillu.openai.model.requests.*
-import com.mardillu.openai.model.response.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.File
 import java.util.concurrent.TimeUnit
 
-/**
- * Created on 26/03/2023 at 12:55 PM
- * @author mardillu
- */
+
 class LoggingClient {
     private val httpClient = OkHttpClient.Builder().apply {
         addInterceptor { chain ->
@@ -92,5 +78,3 @@ class LoggingClient {
     }
 
 }
-
-

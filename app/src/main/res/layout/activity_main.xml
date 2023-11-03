@@ -6,7 +6,14 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context="com.mardillu.openai.MainActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messageStream"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:minHeight="100dp"
+        tools:listitem="@layout/ai_msg_view" />
 
     <ScrollView
         android:layout_width="match_parent"

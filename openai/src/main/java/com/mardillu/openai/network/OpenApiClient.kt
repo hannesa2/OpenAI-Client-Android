@@ -17,10 +17,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-/**
- * Created on 26/03/2023 at 12:55 PM
- * @author mardillu
- */
 class OpenApiClient {
     private val httpClient = OkHttpClient.Builder().apply {
         addInterceptor { chain ->
@@ -43,8 +39,7 @@ class OpenApiClient {
         writeTimeout(1, TimeUnit.MINUTES)
         readTimeout(1, TimeUnit.MINUTES)
         connectTimeout(1, TimeUnit.MINUTES)
-    }
-        .build()
+    }.build()
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://api.openai.com/v1/")
@@ -592,5 +587,3 @@ class OpenApiClient {
         })
     }
 }
-
-
