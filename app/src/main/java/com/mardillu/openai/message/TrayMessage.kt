@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.DiffUtil
  * A simple data class that describes a message in Spokestack. Messages have text or image contents and can
  * be initiated by the user or the system.
  */
-data class TrayMessage(val isSystem: Boolean = false, val content: String, val imageURL: String = "") : Parcelable {
+data class TrayMessage(val trayType: TrayType, val content: String, val imageURL: String = "") : Parcelable {
 
     constructor(parcel: Parcel) : this(
-        parcel.readByte() != 0.toByte(),
+        TrayType.values().get(parcel.readInt()),
         parcel.readString()!!,
         parcel.readString()!!
     )
@@ -45,7 +45,7 @@ data class TrayMessage(val isSystem: Boolean = false, val content: String, val i
 
         other as TrayMessage
 
-        if (isSystem != other.isSystem) return false
+        if (trayType != other.trayType) return false
         if (content != other.content) return false
         if (imageURL != other.imageURL) return false
 
@@ -53,7 +53,7 @@ data class TrayMessage(val isSystem: Boolean = false, val content: String, val i
     }
 
     override fun hashCode(): Int {
-        var result = isSystem.hashCode()
+        var result = trayType.hashCode()
         result = 31 * result + content.hashCode()
         result = 31 * result + imageURL.hashCode()
         return result
@@ -65,7 +65,7 @@ data class TrayMessage(val isSystem: Boolean = false, val content: String, val i
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeByte(if (isSystem) 1 else 0)
+        dest.writeInt(trayType.ordinal)
         dest.writeString(content)
         dest.writeString(imageURL)
     }

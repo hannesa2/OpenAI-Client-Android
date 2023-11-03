@@ -25,11 +25,11 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val msgView: LinearLayout
 
-        val isSystem = viewType == 0
-        msgView = if (isSystem) {
-            LayoutInflater.from(parent.context).inflate(R.layout.ai_msg_view, parent, false) as LinearLayout
-        } else {
-            LayoutInflater.from(parent.context).inflate(R.layout.user_msg_view, parent, false) as LinearLayout
+        val isSystem = TrayType.entries[viewType]
+        msgView = when (isSystem) {
+            TrayType.AI -> LayoutInflater.from(parent.context).inflate(R.layout.ai_msg_view, parent, false) as LinearLayout
+            TrayType.USER -> LayoutInflater.from(parent.context).inflate(R.layout.user_msg_view, parent, false) as LinearLayout
+            TrayType.ERROR -> LayoutInflater.from(parent.context).inflate(R.layout.ai_msg_error_view, parent, false) as LinearLayout
         }
 
         return BubbleViewHolder(msgView)
@@ -38,7 +38,7 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
     override fun getItemCount() = currentList.size
 
     override fun getItemViewType(position: Int): Int {
-        return if (currentList[position].isSystem) 0 else 1
+        return currentList[position].trayType.ordinal
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, @SuppressLint("RecyclerView") position: Int) {
@@ -69,10 +69,7 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
 
     inner class MessageBubbleTarget(private val textView: TextView) :
         CustomTarget<Drawable>(SIZE_ORIGINAL, SIZE_ORIGINAL) {
-        override fun onResourceReady(
-            resource: Drawable,
-            transition: Transition<in Drawable>?
-        ) {
+        override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
             textView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, resource)
             onImageLoad?.invoke(currentList)
         }

@@ -4,7 +4,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@drawable/message_bubble_bg</item>
-        <item name="android:backgroundTint">@color/spoke_colorSystemBg</item>
+        <item name="android:backgroundTint">@color/spoke_colorAiBg</item>
         <item name="android:fontFamily">@string/messageFont</item>
         <item name="android:padding">7dp</item>
         <item name="android:textColor">@color/spoke_colorSystemText</item>

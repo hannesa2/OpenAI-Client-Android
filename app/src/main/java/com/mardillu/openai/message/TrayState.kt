@@ -75,10 +75,10 @@ data class TrayState(
 
     fun addOrUpdateUserMessage(text: String) {
         val message = messages.lastOrNull()
-        if (message == null || message.isSystem) {
-            addMessage(TrayMessage(content = text))
+        if (message == null || message.trayType == TrayType.AI) {
+            message?.trayType?.let { TrayMessage(it, content = text) }?.let { addMessage(it) }
         } else {
-            messages[messages.size - 1] = TrayMessage(false, text)
+            messages[messages.size - 1] = TrayMessage(TrayType.USER, text)
             messageData.notifyObserver()
         }
     }
