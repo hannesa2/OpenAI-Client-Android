@@ -3,16 +3,16 @@ package com.mardillu.openai.test
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.mardillu.openai.model.action.CG_ChatCompletion
-import com.mardillu.openai.model.action.CG_CreateImage
-import com.mardillu.openai.model.action.CG_CreateImageEdit
-import com.mardillu.openai.model.action.CG_CreateImageVariation
-import com.mardillu.openai.model.action.CG_CreateTranscription
-import com.mardillu.openai.model.action.CG_CreateTranslation
-import com.mardillu.openai.model.action.CG_EditCompletionAlt
-import com.mardillu.openai.model.action.CG_Embeddings
-import com.mardillu.openai.model.action.CG_Moderation
-import com.mardillu.openai.model.action.CG_TextCompletion
+import com.mardillu.openai.model.action.CGChatCompletion
+import com.mardillu.openai.model.action.CGCreateImage
+import com.mardillu.openai.model.action.CGCreateImageEdit
+import com.mardillu.openai.model.action.CGCreateImageVariation
+import com.mardillu.openai.model.action.CGCreateTranscription
+import com.mardillu.openai.model.action.CGCreateTranslation
+import com.mardillu.openai.model.action.CGEditCompletionAlt
+import com.mardillu.openai.model.action.CGEmbeddings
+import com.mardillu.openai.model.action.CGModeration
+import com.mardillu.openai.model.action.CGTextCompletion
 import com.mardillu.openai.model.action.ChatGPTInputAction
 import com.mardillu.openai.model.Message
 import com.mardillu.openai.network.LoggingClient
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        }
 
-        chatGPTInputActions.add(CG_TextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
+        chatGPTInputActions.add(CGTextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
             takeNextAction(result?.choices?.get(0)?.text)
         })
         chatGPTInputActions.add(
-            CG_ChatCompletion(
+            CGChatCompletion(
                 messages = listOf(Message("user", "What is the update with your weekly PR review"))
             ) { result, error ->
                 if (error != null) {
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
                 takeNextAction(result?.choices?.get(0)?.message?.content)
             })
         chatGPTInputActions.add(
-            CG_EditCompletionAlt(
+            CGEditCompletionAlt(
                 input = "What day of the wek is it?",
                 instruction = "Fix the spelling mistakes"
             ) { result, error ->
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 takeNextAction(result?.choices?.get(0)?.text)
             })
-        chatGPTInputActions.add(CG_Embeddings("Hello chat gpt! what is the meaning of life?") { result, error ->
+        chatGPTInputActions.add(CGEmbeddings("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(result?.data?.get(0)?.embedding?.size.toString())
         })
-        chatGPTInputActions.add(CG_CreateImage("A cute baby sea otter") { result, error ->
+        chatGPTInputActions.add(CGCreateImage("A cute baby sea otter") { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
         })
-        chatGPTInputActions.add(CG_Moderation("I want to kill them.") { result, error ->
+        chatGPTInputActions.add(CGModeration("I want to kill them.") { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(result?.results?.get(0)?.categories?.hate.toString())
         })
-        chatGPTInputActions.add(CG_CreateImageEdit(
+        chatGPTInputActions.add(CGCreateImageEdit(
             imageFromAssets("img.png"),
             "A cute cat sitting on a white table",
             imageFromAssets("img.png")
@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
         })
-        chatGPTInputActions.add(CG_CreateImageVariation(imageFromAssets("img.png")) { result, error ->
+        chatGPTInputActions.add(CGCreateImageVariation(imageFromAssets("img.png")) { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
         })
-        chatGPTInputActions.add(CG_CreateTranscription(imageFromAssets("audio.m4a")) { result, error ->
+        chatGPTInputActions.add(CGCreateTranscription(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, result?.text ?: error.toString()))
@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
             }
             takeNextAction(result?.text)
         })
-        chatGPTInputActions.add(CG_CreateTranslation(imageFromAssets("audio.m4a")) { result, error ->
+        chatGPTInputActions.add(CGCreateTranslation(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
                 trayState.addMessage(TrayMessage(TrayType.ERROR, result?.text ?: error.toString()))

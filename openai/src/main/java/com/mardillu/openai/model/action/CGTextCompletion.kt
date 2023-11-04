@@ -2,7 +2,7 @@ package com.mardillu.openai.model.action
 
 import com.mardillu.openai.model.response.TextCompletionResponse
 
-data class CG_TextCompletion(
+data class CGTextCompletion(
     val promptVal: String,
     val maxTokens: Int = 16,
     val temperature: Double = 1.0,

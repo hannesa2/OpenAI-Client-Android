@@ -2,7 +2,7 @@ package com.mardillu.openai.model.action
 
 import com.mardillu.openai.model.response.CreateImageResponse
 
-data class CG_CreateImage(
+data class CGCreateImage(
     val promptVal: String,
     val n: Int = 2,
     val size: String = "1024x1024",
