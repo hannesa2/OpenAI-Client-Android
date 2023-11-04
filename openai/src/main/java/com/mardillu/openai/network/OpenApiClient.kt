@@ -3,16 +3,16 @@ package com.mardillu.openai.network
 import com.mardillu.openai.BuildConfig
 import com.mardillu.openai.OpenAiInitializer
 import com.mardillu.openai.model.TextCompletionRequest
-import com.mardillu.openai.model.action.CG_ChatCompletion
-import com.mardillu.openai.model.action.CG_CreateImage
-import com.mardillu.openai.model.action.CG_CreateImageEdit
-import com.mardillu.openai.model.action.CG_CreateImageVariation
-import com.mardillu.openai.model.action.CG_CreateTranscription
-import com.mardillu.openai.model.action.CG_CreateTranslation
-import com.mardillu.openai.model.action.CG_EditCompletionAlt
-import com.mardillu.openai.model.action.CG_Embeddings
-import com.mardillu.openai.model.action.CG_Moderation
-import com.mardillu.openai.model.action.CG_TextCompletion
+import com.mardillu.openai.model.action.CGChatCompletion
+import com.mardillu.openai.model.action.CGCreateImage
+import com.mardillu.openai.model.action.CGCreateImageEdit
+import com.mardillu.openai.model.action.CGCreateImageVariation
+import com.mardillu.openai.model.action.CGCreateTranscription
+import com.mardillu.openai.model.action.CGCreateTranslation
+import com.mardillu.openai.model.action.CGEditCompletionAlt
+import com.mardillu.openai.model.action.CGEmbeddings
+import com.mardillu.openai.model.action.CGModeration
+import com.mardillu.openai.model.action.CGTextCompletion
 import com.mardillu.openai.model.action.ChatGPTInputAction
 import com.mardillu.openai.model.requests.*
 import com.mardillu.openai.model.response.*
@@ -25,7 +25,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 import timber.log.Timber
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 class OpenApiClient {
@@ -62,16 +61,16 @@ class OpenApiClient {
 
     fun runAction(chatGPTInputAction: ChatGPTInputAction) {
         when (chatGPTInputAction) {
-            is CG_ChatCompletion -> getChatCompletion(chatGPTInputAction)
-            is CG_CreateImage -> createImage(chatGPTInputAction)
-            is CG_CreateImageVariation -> createImageVariation(chatGPTInputAction)
-            is CG_CreateTranscription -> createTranscription(chatGPTInputAction)
-            is CG_CreateTranslation -> createTranslation(chatGPTInputAction)
-            is CG_EditCompletionAlt -> getEditCompletionAlt(chatGPTInputAction)
-            is CG_Embeddings -> getEmbeddings(chatGPTInputAction)
-            is CG_Moderation -> getModeration(chatGPTInputAction)
-            is CG_TextCompletion -> getTextCompletion(chatGPTInputAction)
-            is CG_CreateImageEdit -> createImageEdit(chatGPTInputAction)
+            is CGChatCompletion -> getChatCompletion(chatGPTInputAction)
+            is CGCreateImage -> createImage(chatGPTInputAction)
+            is CGCreateImageVariation -> createImageVariation(chatGPTInputAction)
+            is CGCreateTranscription -> createTranscription(chatGPTInputAction)
+            is CGCreateTranslation -> createTranslation(chatGPTInputAction)
+            is CGEditCompletionAlt -> getEditCompletionAlt(chatGPTInputAction)
+            is CGEmbeddings -> getEmbeddings(chatGPTInputAction)
+            is CGModeration -> getModeration(chatGPTInputAction)
+            is CGTextCompletion -> getTextCompletion(chatGPTInputAction)
+            is CGCreateImageEdit -> createImageEdit(chatGPTInputAction)
             else -> Timber.e("Action ${chatGPTInputAction.javaClass.simpleName} not handled")
         }
     }
@@ -100,7 +99,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/completions">OpenAI API Reference</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getTextCompletion(action: CG_TextCompletion) {
+    fun getTextCompletion(action: CGTextCompletion) {
         val requestBody = TextCompletionRequest(
             arrayOf(action.prompt),
             action.maxTokens,
@@ -142,7 +141,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/chat">OpenAI API Reference for Chat</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getChatCompletion(action: CG_ChatCompletion) {
+    fun getChatCompletion(action: CGChatCompletion) {
         val requestBody = ChatCompletionRequest(action.model, action.messages)
         val call = apiService.getChatCompletion(requestBody)
 
@@ -259,7 +258,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/edits">OpenAI API Reference for Edits</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getEditCompletionAlt(action: CG_EditCompletionAlt) {
+    fun getEditCompletionAlt(action: CGEditCompletionAlt) {
         getEditCompletionAltInternal("$action.input. $action.instruction") { response, t ->
             if (response == null) {
                 action.completionHandler(null, t)
@@ -279,7 +278,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/embeddings">OpenAI API Reference for Embeddings</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getEmbeddings(action: CG_Embeddings) {
+    fun getEmbeddings(action: CGEmbeddings) {
         val requestBody = CreateEmbeddingRequest(action.model, action.input)
         val call = apiService.getEmbeddings(requestBody)
 
@@ -313,7 +312,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create">OpenAI API Reference for creating images</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun createImage(action: CG_CreateImage) {
+    fun createImage(action: CGCreateImage) {
         if (action.n !in 1..10) {
             throw Exception("n (number of images to generate) must be between 1 and 10")
         }
@@ -353,7 +352,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/moderations">OpenAI API Reference for Moderation</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun getModeration(action: CG_Moderation) {
+    fun getModeration(action: CGModeration) {
         val requestBody = ModerationRequest(action.input, action.model)
         val call = apiService.getModeration(requestBody)
 
@@ -421,7 +420,7 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create-edit">OpenAI API Reference for Image Edit</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun createImageEdit(action: CG_CreateImageEdit) {
+    fun createImageEdit(action: CGCreateImageEdit) {
         val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
         val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
         val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
@@ -466,7 +465,7 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create-variation">OpenAI API Reference for Image Variations</a>
      */
-    fun createImageVariation(action: CG_CreateImageVariation) {
+    fun createImageVariation(action: CGCreateImageVariation) {
         val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
         val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
         val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
@@ -502,7 +501,7 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/audio/create">OpenAI API Reference for Audio transcription</a>
      */
-    fun createTranscription(action: CG_CreateTranscription) {
+    fun createTranscription(action: CGCreateTranscription) {
         val requestFile = action.file.asRequestBody("audio/*".toMediaTypeOrNull())
         val _model = action.model.toRequestBody("text/plain".toMediaTypeOrNull())
         val audioPart = MultipartBody.Part.createFormData("file", action.file.name, requestFile)
@@ -537,7 +536,7 @@ class OpenApiClient {
      * @param completionHandler Function2<GetModelsResponse?, Throwable?, Unit> callback handler
      * @see <a href="https://platform.openai.com/docs/api-reference/audio/create">OpenAI API Reference for Audio translation</a>
      */
-    fun createTranslation(action: CG_CreateTranslation) {
+    fun createTranslation(action: CGCreateTranslation) {
         val requestFile = action.file.asRequestBody("audio/*".toMediaTypeOrNull())
         val _model = action.model.toRequestBody("text/plain".toMediaTypeOrNull())
         val audioPart = MultipartBody.Part.createFormData("file", action.file.name, requestFile)
