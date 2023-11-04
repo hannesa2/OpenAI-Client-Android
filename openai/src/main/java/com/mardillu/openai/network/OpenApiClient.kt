@@ -5,6 +5,7 @@ import com.mardillu.openai.OpenAiInitializer
 import com.mardillu.openai.model.TextCompletionRequest
 import com.mardillu.openai.model.action.CG_ChatCompletion
 import com.mardillu.openai.model.action.CG_CreateImage
+import com.mardillu.openai.model.action.CG_CreateImageEdit
 import com.mardillu.openai.model.action.CG_CreateImageVariation
 import com.mardillu.openai.model.action.CG_CreateTranscription
 import com.mardillu.openai.model.action.CG_CreateTranslation
@@ -70,6 +71,7 @@ class OpenApiClient {
             is CG_Embeddings -> getEmbeddings(chatGPTInputAction)
             is CG_Moderation -> getModeration(chatGPTInputAction)
             is CG_TextCompletion -> getTextCompletion(chatGPTInputAction)
+            is CG_CreateImageEdit -> createImageEdit(chatGPTInputAction)
             else -> Timber.e("Action ${chatGPTInputAction.javaClass.simpleName} not handled")
         }
     }
@@ -419,23 +421,16 @@ class OpenApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/images/create-edit">OpenAI API Reference for Image Edit</a>
      * @see {@link ChatGptService#getModels()}
      */
-    fun createImageEdit(
-        image: File,
-        prompt: String,
-        mask: File? = null,
-        n: Int = 1,
-        size: String = "1024x1024",
-        completionHandler: (CreateImageResponse?, Throwable?) -> Unit
-    ) {
-        val requestFile = image.asRequestBody("image/*".toMediaTypeOrNull())
-        val _size = size.toRequestBody("text/plain".toMediaTypeOrNull())
-        val _n = "$n".toRequestBody("text/plain".toMediaTypeOrNull())
-        val _prompt = prompt.toRequestBody("text/plain".toMediaTypeOrNull())
-        val imagePart = MultipartBody.Part.createFormData("image", image.name, requestFile)
+    fun createImageEdit(action: CG_CreateImageEdit) {
+        val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
+        val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
+        val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
+        val _prompt = action.prompt.toRequestBody("text/plain".toMediaTypeOrNull())
+        val imagePart = MultipartBody.Part.createFormData("image", action.image.name, requestFile)
 
-        val call = if (mask != null) {
-            val maskFile = mask.asRequestBody("image/*".toMediaTypeOrNull())
-            val maskPart = MultipartBody.Part.createFormData("mask", mask.name, maskFile)
+        val call = if (action.mask != null) {
+            val maskFile = action.mask.asRequestBody("image/*".toMediaTypeOrNull())
+            val maskPart = MultipartBody.Part.createFormData("mask", action.mask.name, maskFile)
 
             apiService.createImageEdit(imagePart, maskPart, _prompt, _n, _size)
         } else {
@@ -449,15 +444,15 @@ class OpenApiClient {
             ) {
                 if (response.isSuccessful) {
                     val result = response.body()
-                    completionHandler(result, null)
+                    action.completionHandler(result, null)
                 } else {
                     val error = HttpException(response)
-                    completionHandler(null, error)
+                    action.completionHandler(null, error)
                 }
             }
 
             override fun onFailure(call: Call<CreateImageResponse>, t: Throwable) {
-                completionHandler(null, t)
+                action.completionHandler(null, t)
             }
         })
     }
