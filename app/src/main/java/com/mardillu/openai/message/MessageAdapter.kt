@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.mardillu.openai.test.GlideApp
 import com.mardillu.openai.test.R
 
 class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.ViewHolder>(TrayMessage.DIFF_UTIL_CALLBACK) {
@@ -53,7 +54,7 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
         val textView = layout.findViewById<TextView>(R.id.messageContent)
         if (message.imageURL.isNotEmpty()) {
             val imageUri = Uri.parse(message.imageURL)
-            Glide.with(holder.itemView).load(imageUri).into(MessageBubbleTarget(textView))
+            GlideApp.with(holder.itemView).load(imageUri).into(MessageBubbleTarget(textView))
         } else {
             textView.setCompoundDrawables(null, null, null, null)
         }
