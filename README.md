@@ -23,7 +23,7 @@ allprojects {
 ~~~groovy
 dependencies {
     //replace XX with the latest version
-    implementation 'com.github.mardillu:OpenAI-Client-Android:XX'
+    implementation 'com.github.hannesa2:OpenAI-Client-Android:XX'
 }
 ~~~
 
