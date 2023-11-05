@@ -184,8 +184,10 @@ class MainActivity : AppCompatActivity() {
 
         val observer = { messages: List<TrayMessage> ->
             val lastMessage = messages.size - 1
-            viewAdapter.notifyItemChanged(lastMessage)
-            binding.messageStream.scrollToPosition(lastMessage)
+            if (!binding.messageStream.isComputingLayout) {
+                viewAdapter.notifyItemChanged(lastMessage)
+                binding.messageStream.scrollToPosition(lastMessage)
+            }
         }
         viewAdapter.onImageLoad = observer
 
