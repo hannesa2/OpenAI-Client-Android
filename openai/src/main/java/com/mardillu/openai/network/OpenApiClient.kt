@@ -423,7 +423,8 @@ class OpenApiClient {
     fun createImageEdit(action: CGCreateImageEdit) {
         val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
         val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
-        val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
+        val nn = action.n
+        val _n = "$nn".toRequestBody("text/plain".toMediaTypeOrNull())
         val _prompt = action.prompt.toRequestBody("text/plain".toMediaTypeOrNull())
         val imagePart = MultipartBody.Part.createFormData("image", action.image.name, requestFile)
 
@@ -468,7 +469,8 @@ class OpenApiClient {
     fun createImageVariation(action: CGCreateImageVariation) {
         val requestFile = action.image.asRequestBody("image/*".toMediaTypeOrNull())
         val _size = action.size.toRequestBody("text/plain".toMediaTypeOrNull())
-        val _n = "$action.n".toRequestBody("text/plain".toMediaTypeOrNull())
+        val nn = action.n
+        val _n = "$nn".toRequestBody("text/plain".toMediaTypeOrNull())
         val imagePart = MultipartBody.Part.createFormData("image", action.image.name, requestFile)
 
         val call = apiService.createImageVariation(imagePart, _n, _size)
