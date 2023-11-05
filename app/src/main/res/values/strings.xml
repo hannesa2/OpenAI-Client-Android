@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">OpenAPI</string>
-    <string name="messageFont">sans-serif</string>
 
     <string name="OPEN_AI_API_KEY" translatable="false">API_KEY</string>
 

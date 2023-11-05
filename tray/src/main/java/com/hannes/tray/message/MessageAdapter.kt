@@ -1,4 +1,4 @@
-package com.mardillu.openai.message
+package com.hannes.tray.message
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -11,12 +11,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import com.mardillu.openai.test.GlideApp
-import com.mardillu.openai.test.R
-import timber.log.Timber
+import com.hannes.tray.GlideApp
+import com.hannes.tray.R
 
 class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.ViewHolder>(TrayMessage.DIFF_UTIL_CALLBACK) {
 
@@ -55,7 +53,6 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
         val textView = layout.findViewById<TextView>(R.id.messageContent)
         if (message.imageURL.isNotEmpty()) {
             val imageUri = Uri.parse(message.imageURL)
-            Timber.d("Image ${message.imageURL}")
             GlideApp.with(holder.itemView).load(imageUri).into(MessageBubbleTarget(textView))
         } else {
             textView.setCompoundDrawables(null, null, null, null)
