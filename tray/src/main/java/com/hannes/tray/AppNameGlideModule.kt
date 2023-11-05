@@ -1,4 +1,4 @@
-package com.mardillu.openai.test
+package com.hannes.tray
 
 import android.content.Context
 import com.bumptech.glide.GlideBuilder

@@ -1,4 +1,4 @@
 jdk:
   - openjdk17
 install:
-  - ./gradlew :openai:assembleRelease :openai:publishToMavenLocal
+  - ./gradlew :openai:assembleRelease :openai:publishToMavenLocal :tray:assembleRelease :tray:publishToMavenLocal

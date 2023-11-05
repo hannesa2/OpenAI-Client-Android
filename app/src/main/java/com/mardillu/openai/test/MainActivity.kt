@@ -18,10 +18,10 @@ import com.mardillu.openai.model.Message
 import com.mardillu.openai.network.LoggingClient
 import com.mardillu.openai.network.OpenApiClient
 import com.mardillu.openai.test.databinding.ActivityMainBinding
-import com.mardillu.openai.message.MessageAdapter
-import com.mardillu.openai.message.TrayMessage
-import com.mardillu.openai.message.TrayState
-import com.mardillu.openai.message.TrayType
+import com.hannes.tray.message.MessageAdapter
+import com.hannes.tray.message.TrayMessage
+import com.hannes.tray.message.TrayState
+import com.hannes.tray.message.TrayType
 import java.io.File
 import java.util.LinkedList
 
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGTextCompletion("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(result?.choices?.get(0)?.text)
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
             ) { result, error ->
                 if (error != null) {
                     // Handle error
-                    trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                    trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
                 } else if (result != null) {
 
                 }
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             ) { result, error ->
                 if (error != null) {
                     // Handle error
-                    trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                    trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
                 } else if (result != null) {
 
                 }
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGEmbeddings("Hello chat gpt! what is the meaning of life?") { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(result?.data?.get(0)?.embedding?.size.toString())
@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGCreateImage("A cute baby sea otter") { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGModeration("I want to kill them.") { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(result?.results?.get(0)?.categories?.hate.toString())
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         ) { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGCreateImageVariation(imageFromAssets("img.png")) { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, error.toString()))
             } else if (result != null) {
             }
             takeNextAction(null, result?.data?.get(0)?.url)
@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGCreateTranscription(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, result?.text ?: error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, result?.text ?: error.toString()))
             } else if (result != null) {
             }
             takeNextAction(result?.text)
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         chatGPTInputActions.add(CGCreateTranslation(imageFromAssets("audio.m4a")) { result, error ->
             if (error != null) {
                 // Handle error
-                trayState.addMessage(TrayMessage(TrayType.ERROR, result?.text ?: error.toString()))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.ERROR, result?.text ?: error.toString()))
             } else if (result != null) {
             }
             takeNextAction(result?.text)
@@ -154,14 +154,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun takeNextAction(previousOutput: String?, url: String? = null) {
         url?.let {
-            trayState.addMessage(TrayMessage(TrayType.AI, content = "", imageURL = it))
+            trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.AI, content = "", imageURL = it))
         } ?: run {
             previousOutput?.let {
-                trayState.addMessage(TrayMessage(TrayType.AI, content = it))
+                trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.AI, content = it))
             }
         }
         chatGPTInputActions.poll()?.let {
-            trayState.addMessage(TrayMessage(TrayType.USER, it.prompt))
+            trayState.addMessage(com.hannes.tray.message.TrayMessage(com.hannes.tray.message.TrayType.USER, it.prompt))
             chatGptService.runAction(it)
         }
     }
@@ -179,10 +179,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configureMessageStream() {
-        val viewAdapter = MessageAdapter(this)
+        val viewAdapter = com.hannes.tray.message.MessageAdapter(this)
         viewAdapter.submitList(trayState.messages)
 
-        val observer = { messages: List<TrayMessage> ->
+        val observer = { messages: List<com.hannes.tray.message.TrayMessage> ->
             val lastMessage = messages.size - 1
             if (!binding.messageStream.isComputingLayout) {
                 viewAdapter.notifyItemChanged(lastMessage)
@@ -202,6 +202,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        internal val trayState: TrayState = TrayState(messages = arrayListOf())
+        internal val trayState: com.hannes.tray.message.TrayState = com.hannes.tray.message.TrayState(messages = arrayListOf())
     }
 }

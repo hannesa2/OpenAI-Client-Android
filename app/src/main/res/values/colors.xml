@@ -7,18 +7,4 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-
-    <color name="spoke_colorTrayBg">#FFFFFF</color>
-    <color name="spoke_colorIcon">#FFFFFF</color>
-    <color name="spoke_colorListenText">#FFFFFF</color>
-    <color name="spoke_colorDragHandle">#E2E2E2</color>
-    <color name="spoke_colorSystemText">#000000</color>
-    <color name="spoke_colorUserText">#000000</color>
-    <color name="spoke_colorBrand">#2F5BEA</color>
-    <color name="spoke_colorAiBg">#CCE4FF</color>
-    <color name="spoke_colorAiErrorBg">#77FF009F</color>
-    <color name="spoke_colorUserBg">#F6F9FC</color>
-    <color name="spoke_colorGradientOne">@color/spoke_colorBrand</color>
-    <color name="spoke_colorGradientTwo">#61FAE9</color>
-    <color name="spoke_colorTransparent">#00FFFFFF</color>
 </resources>

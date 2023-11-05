@@ -1,4 +1,4 @@
-package com.mardillu.openai.message
+package com.hannes.tray.message
 
 import android.os.Parcel
 import android.os.Parcelable
