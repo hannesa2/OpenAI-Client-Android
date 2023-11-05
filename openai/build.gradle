@@ -43,3 +43,13 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
     api "com.github.AppDevNext.Logcat:LogcatCoreLib:3.2"
 }
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+}
