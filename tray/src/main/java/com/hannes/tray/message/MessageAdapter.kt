@@ -18,8 +18,8 @@ import com.hannes.tray.R
 
 class MessageAdapter(
     context: Context,
-    private val onClick: ((text: String) -> String)? = null,
-    private val onLongClick: ((text: String) -> String)? = null
+    private val onClick: ((text: String) -> Unit)? = null,
+    private val onLongClick: ((text: String) -> Unit)? = null
 ) : ListAdapter<TrayMessage, RecyclerView.ViewHolder>(TrayMessage.DIFF_UTIL_CALLBACK) {
 
     private var startPosition = -1
