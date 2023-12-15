@@ -16,7 +16,11 @@ import com.bumptech.glide.request.transition.Transition
 import com.hannes.tray.GlideApp
 import com.hannes.tray.R
 
-class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.ViewHolder>(TrayMessage.DIFF_UTIL_CALLBACK) {
+class MessageAdapter(
+    context: Context,
+    private val onClick: ((text: String) -> String)? = null,
+    private val onLongClick: ((text: String) -> String)? = null
+) : ListAdapter<TrayMessage, RecyclerView.ViewHolder>(TrayMessage.DIFF_UTIL_CALLBACK) {
 
     private var startPosition = -1
     private val bubbleAnimation = AnimationUtils.loadAnimation(context, R.anim.item_enter)
@@ -58,6 +62,17 @@ class MessageAdapter(context: Context) : ListAdapter<TrayMessage, RecyclerView.V
             textView.setCompoundDrawables(null, null, null, null)
         }
         textView.text = message.content
+        textView.setOnClickListener {
+            onClick?.invoke(textView.text.toString())
+        }
+        textView.setOnLongClickListener {
+            onLongClick?.let {
+                it.invoke(textView.text.toString())
+                true
+            } ?: run {
+                false
+            }
+        }
     }
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
