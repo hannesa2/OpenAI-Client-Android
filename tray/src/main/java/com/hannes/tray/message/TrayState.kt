@@ -73,6 +73,14 @@ data class TrayState(
         messageData.notifyObserver()
     }
 
+    fun deleteMessage(trayMessage: TrayMessage) {
+        // observers only need to know when to add a message to the chat stream;
+        // other data is only for saving/restoring UI state
+        messages.add((trayMessage))
+        messages.remove(trayMessage)
+        messageData.notifyObserver()
+    }
+
     fun addOrUpdateUserMessage(text: String) {
         val message = messages.lastOrNull()
         if (message == null || message.trayType == TrayType.AI) {
